@@ -1,30 +1,39 @@
 import {getWsProvider} from "polkadot-api/ws-provider/web";
 import type {JsonRpcProvider} from "@polkadot-api/ws-provider/web";
 import {createClient, type PolkadotClient, type SS58String} from "polkadot-api";
-import {dot, people} from "@polkadot-api/descriptors";
+import {collectives, dot, people} from "@polkadot-api/descriptors";
 
 const POLKADOT_RPC_ENDPOINT = 'wss://rpc.polkadot.io';
 const PEOPLE_RPC_ENDPOINT = "wss://polkadot-people-rpc.polkadot.io";
+const COLLECTIVES_RPC_ENDPOINT = "wss://polkadot-collectives-rpc.polkadot.io";
+
 const DEFAULT_ADDRESS = "15DCZocYEM2ThYCAj22QE4QENRvUNVrDtoLBVbCm5x4EQncr";
 
 async function main(): Promise<void> {
     const polkadotClient: PolkadotClient = makeClient(POLKADOT_RPC_ENDPOINT);
     console.log(polkadotClient);
-    const peopleClient = makeClient(PEOPLE_RPC_ENDPOINT);
-
     await printChainInfo(polkadotClient);
+
+    const peopleClient = makeClient(PEOPLE_RPC_ENDPOINT);
+    await printChainInfo(peopleClient);
+
+    const collectivesClient = makeClient(
+        COLLECTIVES_RPC_ENDPOINT,
+    );
+    await printChainInfo(collectivesClient);
 
     const balance = await getBalance(polkadotClient, DEFAULT_ADDRESS);
     console.log("Address: " + DEFAULT_ADDRESS);
     console.log("Balance: ", balance);
 
     const displayName = await getDisplayName(peopleClient, DEFAULT_ADDRESS);
-    console.log("Address: " + DEFAULT_ADDRESS);
     console.log(`Balance(${displayName}): `, balance);
 
-    // - Call `getBalance`, using the constants `polkadotClient` and `address`.
-    // - `await` the result, and assign it to a constant named `balance`.
-    // - Print a friendly message to display the `address` and their `balance`.
+    const members: FellowshipMember[] = await getFellowshipMembers(collectivesClient);
+
+    console.log("Generating table...");
+
+    console.table(members);
 }
 
 // - Create a new function `makeClient`
@@ -66,6 +75,7 @@ async function printChainInfo(client: PolkadotClient) {
 // - Write the logic of the `getBalance` function:
 async function getBalance(client: PolkadotClient,
                           address: SS58String): Promise<BigInt> {
+
     //   - Call the `getTypedApi` method on the `polkadotClient` variable.
     //     - The `getTypedApi` method should include the parameter `dot`, which we imported above.
     //     - Assign the result to a new constant `dotApi`.
@@ -92,6 +102,7 @@ async function getBalance(client: PolkadotClient,
 // - Write the logic of the `getDisplayName` function:
 async function getDisplayName(peopleClient: PolkadotClient,
                               address: SS58String): Promise<string | undefined> {
+
     //   - Call the `getTypedApi` method on the `peopleClient` variable.
     //     - The `getTypedApi` method should include the parameter `people`, which we imported above.
     //     - Assign the result to a new constant `peopleApi`.
@@ -107,6 +118,47 @@ async function getDisplayName(peopleClient: PolkadotClient,
     return info.display.value?.asText();
 }
 
+interface FellowshipMember {
+    address: SS58String;
+    rank: number;
+}
+
+// - Create a new `async` function `getFellowshipMembers`:
+//   - It has a single parameter `collectivesClient` of type `PolkadotClient`.
+//   - It returns an array of fellowship members: `Promise<FellowshipMember[]>`.
+// - Write the logic of the `getFellowshipMembers` function:
+async function getFellowshipMembers(
+    collectivesClient: PolkadotClient,
+): Promise<FellowshipMember[]> {
+
+    //   - Call the `getTypedApi` method on the `collectivesClient` variable.
+    //     - The `getTypedApi` method should include the parameter `collectives`, which we imported above.
+    //     - Assign the result to a new constant `collectivesApi`.
+    const collectivesApi =
+        collectivesClient.getTypedApi(collectives);
+
+    //   - Call `collectivesApi.query.FellowshipCollective.Members.getEntries()`.
+    //   - `await` the result, and assign it to a new constant `rawMembers`.
+    const rawMembers =
+        await collectivesApi.query.FellowshipCollective.Members.getEntries();
+
+    //   - Extract the `address` and `rank` from `rawMembers`:
+    //     - `map` the items of `rawMembers` to access the individual members `m`.
+    //     - Access the `address` of the member by calling `m.keyArgs[0]`.
+    //     - Access the `rank` of the member by calling `m.value`.
+    //       - Make sure the data is in the structure of `FellowshipMember`.
+    //   - Return the `fellowshipMembers` constant.
+    return rawMembers
+        .filter(m =>
+            m.keyArgs[0] !== null && m.value !== null)
+        .sort((a, b) =>
+            b.value - a.value)
+        .map<FellowshipMember>(m =>
+            ({
+                address: m.keyArgs[0],
+                rank: m.value
+            } as FellowshipMember));
+}
 
 // Invoke main function
 main()
