@@ -11,7 +11,7 @@ Install dependencies:
 bun install
 ```
 
-To run:
+Run Script:
 
 ```bash
 bun run index.ts
@@ -31,7 +31,7 @@ Adding Polkadot:
 bunx papi add dot -n polkadot
 ```
 - Creates `.papi` directory in root adds latest metadata for polkadot chain
-- Adds npm dependency "@polkadot-api/descriptors": "file:.papi/descriptors",.
+- Adds npm dependency `@polkadot-api/descriptors": "file:.papi/descriptors`
 - Creates a PAPI configuration file `polkadot-api.json` 
 
 Adding other chains:

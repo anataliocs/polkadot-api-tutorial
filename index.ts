@@ -1,25 +1,26 @@
 import {getWsProvider} from "polkadot-api/ws-provider/web";
 import type {JsonRpcProvider} from "@polkadot-api/ws-provider/web";
 import {createClient, type PolkadotClient, type SS58String} from "polkadot-api";
-import {dot} from "@polkadot-api/descriptors";
+import {dot, people} from "@polkadot-api/descriptors";
 
 const POLKADOT_RPC_ENDPOINT = 'wss://rpc.polkadot.io';
+const PEOPLE_RPC_ENDPOINT = "wss://polkadot-people-rpc.polkadot.io";
+const DEFAULT_ADDRESS = "15DCZocYEM2ThYCAj22QE4QENRvUNVrDtoLBVbCm5x4EQncr";
 
 async function main(): Promise<void> {
     const polkadotClient: PolkadotClient = makeClient(POLKADOT_RPC_ENDPOINT);
     console.log(polkadotClient);
+    const peopleClient = makeClient(PEOPLE_RPC_ENDPOINT);
 
     await printChainInfo(polkadotClient);
 
-    // TODO:
-    // - Create a new constant `address` with value .
-
-    const address = `"15DCZocYEM2ThYCAj22QE4QENRvUNVrDtoLBVbCm5x4EQncr"`;
-
-    const balance = await getBalance(polkadotClient, address);
-
-    console.log("Address: " + address);
+    const balance = await getBalance(polkadotClient, DEFAULT_ADDRESS);
+    console.log("Address: " + DEFAULT_ADDRESS);
     console.log("Balance: ", balance);
+
+    const displayName = await getDisplayName(peopleClient, DEFAULT_ADDRESS);
+    console.log("Address: " + DEFAULT_ADDRESS);
+    console.log(`Balance(${displayName}): `, balance);
 
     // - Call `getBalance`, using the constants `polkadotClient` and `address`.
     // - `await` the result, and assign it to a constant named `balance`.
@@ -63,7 +64,8 @@ async function printChainInfo(client: PolkadotClient) {
 //     - A parameter named `address` which is of type `SS58String` which we imported above.
 //   - It returns a `Promise<BigInt>`.
 // - Write the logic of the `getBalance` function:
-async function getBalance(client: PolkadotClient, address: SS58String): Promise<BigInt> {
+async function getBalance(client: PolkadotClient,
+                          address: SS58String): Promise<BigInt> {
     //   - Call the `getTypedApi` method on the `polkadotClient` variable.
     //     - The `getTypedApi` method should include the parameter `dot`, which we imported above.
     //     - Assign the result to a new constant `dotApi`.
@@ -82,6 +84,29 @@ async function getBalance(client: PolkadotClient, address: SS58String): Promise<
     return free + reserved;
 }
 
+// - Create a new `async` function called `getDisplayName`:
+//   - It accepts two parameters:
+//     - `peopleClient` which is of type `PolkadotClient`.
+//     - `address` which is of type `SS58String`.
+//   - It returns a `Promise<string | undefined>`.
+// - Write the logic of the `getDisplayName` function:
+async function getDisplayName(peopleClient: PolkadotClient,
+                              address: SS58String): Promise<string | undefined> {
+    //   - Call the `getTypedApi` method on the `peopleClient` variable.
+    //     - The `getTypedApi` method should include the parameter `people`, which we imported above.
+    //     - Assign the result to a new constant `peopleApi`.
+    const peopleApi = peopleClient.getTypedApi(people);
+
+    //   - Call `peopleApi.query.Identity.IdentityOf.getValue(address)`.
+    //   - `await` the result, and assign it to a new constant `accountInfo`.
+    const {info}: any = await peopleApi.query.Identity.IdentityOf.getValue(address);
+
+    //   - Extract the display name with: `accountInfo?.[0].info.display.value?.asText()`
+    //     - Assign the result to a new constant `displayName`.
+    //   - Return the `displayName` constant.
+    return info.display.value?.asText();
+}
+
 
 // Invoke main function
 main()
@@ -89,7 +114,7 @@ main()
         console.error(error);
     })
     .then(() => {
-        console.log("Execution complete");
+        console.log("\n Execution complete \n");
     })
     .finally(() => {
         process.exit(0);
