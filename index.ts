@@ -33,7 +33,22 @@ async function main(): Promise<void> {
 
     console.log("Generating table...");
 
-    console.table(members);
+    const membersInfoTable: FellowshipMemberInfo[] = await Promise.all(members
+        .map(async m => ({
+            address: m.address,
+            rank: m.rank,
+            displayName: await getDisplayName(peopleClient, m.address),
+            balance: await getBalance(polkadotClient, m.address)
+        } as FellowshipMemberInfo)));
+
+    console.table(membersInfoTable);
+}
+
+interface FellowshipMemberInfo {
+    address: SS58String;
+    rank: number;
+    displayName: string | undefined;
+    balance: BigInt;
 }
 
 // - Create a new function `makeClient`
@@ -103,19 +118,23 @@ async function getBalance(client: PolkadotClient,
 async function getDisplayName(peopleClient: PolkadotClient,
                               address: SS58String): Promise<string | undefined> {
 
-    //   - Call the `getTypedApi` method on the `peopleClient` variable.
-    //     - The `getTypedApi` method should include the parameter `people`, which we imported above.
-    //     - Assign the result to a new constant `peopleApi`.
-    const peopleApi = peopleClient.getTypedApi(people);
+    try {
+        //   - Call the `getTypedApi` method on the `peopleClient` variable.
+        //     - The `getTypedApi` method should include the parameter `people`, which we imported above.
+        //     - Assign the result to a new constant `peopleApi`.
+        const peopleApi = peopleClient.getTypedApi(people);
 
-    //   - Call `peopleApi.query.Identity.IdentityOf.getValue(address)`.
-    //   - `await` the result, and assign it to a new constant `accountInfo`.
-    const {info}: any = await peopleApi.query.Identity.IdentityOf.getValue(address);
+        //   - Call `peopleApi.query.Identity.IdentityOf.getValue(address)`.
+        //   - `await` the result, and assign it to a new constant `accountInfo`.
+        const {info}: any = await peopleApi.query.Identity.IdentityOf.getValue(address);
 
-    //   - Extract the display name with: `accountInfo?.[0].info.display.value?.asText()`
-    //     - Assign the result to a new constant `displayName`.
-    //   - Return the `displayName` constant.
-    return info.display.value?.asText();
+        //   - Extract the display name with: `accountInfo?.[0].info.display.value?.asText()`
+        //     - Assign the result to a new constant `displayName`.
+        //   - Return the `displayName` constant.
+        return info.display.value?.asText();
+    } catch (error) {
+        return "Display Name Missing";
+    }
 }
 
 interface FellowshipMember {
