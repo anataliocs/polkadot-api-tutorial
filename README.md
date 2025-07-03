@@ -40,3 +40,7 @@ bunx papi add people -n polkadot_people
 bunx papi add collectives -n polkadot_collectives
 ```
 
+----
+
+## Output
+![image](https://github.com/user-attachments/assets/0e9f8931-8f33-4f54-b2d9-9baba1792778)
