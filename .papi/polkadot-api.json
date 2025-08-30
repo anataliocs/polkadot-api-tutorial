@@ -19,6 +19,12 @@
       "metadata": ".papi/metadata/collectives.scale",
       "genesis": "0x46ee89aa2eedd13e988962630ec9fb7565964cf5023bb351f2b6b25c1b68b0b2",
       "codeHash": "0xd4c7e0bd585b07c41426181d59c4e14e9bb0f17a5d4c3043d8bba659fa94c3a0"
+    },
+    "paseo": {
+      "chain": "polkadot",
+      "metadata": ".papi/metadata/paseo.scale",
+      "genesis": "0x91b171bb158e2d3848fa23a9f1c25182fb8e20313b2c1eb49219da7a70ce90c3",
+      "codeHash": "0xe260d17fcfa34f10503c91148a7bc2fd820e356295d2e18f828b5fa4190d47f7"
     }
   }
 }

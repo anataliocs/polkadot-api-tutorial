@@ -1,13 +1,24 @@
 import {getWsProvider} from "polkadot-api/ws-provider/web";
 import type {JsonRpcProvider} from "@polkadot-api/ws-provider/web";
 import {createClient, type PolkadotClient, type SS58String} from "polkadot-api";
-import {collectives, dot, people} from "@polkadot-api/descriptors";
+import {collectives, dot, paseo, people} from "@polkadot-api/descriptors";
 
 const POLKADOT_RPC_ENDPOINT = 'wss://rpc.polkadot.io';
 const PEOPLE_RPC_ENDPOINT = "wss://polkadot-people-rpc.polkadot.io";
 const COLLECTIVES_RPC_ENDPOINT = "wss://polkadot-collectives-rpc.polkadot.io";
+const PASEO_RPC_ENDPOINT = "wss://paseo.rpc.amforc.com";
 
 const DEFAULT_ADDRESS = "15DCZocYEM2ThYCAj22QE4QENRvUNVrDtoLBVbCm5x4EQncr";
+
+async function getSudoAccountFreeBalance(paseoClient) {
+    const paseoApi = paseoClient.getTypedApi(paseo);
+
+    //   - Call `dotApi.query.System.Account.getValue(address)`.
+    const accountInfo =
+        await paseoApi.query.System.Account.getValue(DEFAULT_ADDRESS);
+
+    console.log(accountInfo);
+}
 
 async function main(): Promise<void> {
     const polkadotClient: PolkadotClient = makeClient(POLKADOT_RPC_ENDPOINT);
@@ -21,6 +32,9 @@ async function main(): Promise<void> {
         COLLECTIVES_RPC_ENDPOINT,
     );
     await printChainInfo(collectivesClient);
+
+    const paseoClient = makeClient(PASEO_RPC_ENDPOINT);
+    await printChainInfo(paseoClient);
 
     const balance = await getBalance(polkadotClient, DEFAULT_ADDRESS);
     console.log("Address: " + DEFAULT_ADDRESS);
@@ -42,6 +56,8 @@ async function main(): Promise<void> {
         } as FellowshipMemberInfo)));
 
     console.table(membersInfoTable);
+
+    await getSudoAccountFreeBalance(paseoClient);
 }
 
 interface FellowshipMemberInfo {

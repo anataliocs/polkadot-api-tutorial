@@ -38,6 +38,7 @@ Adding other chains:
 ```
 bunx papi add people -n polkadot_people
 bunx papi add collectives -n polkadot_collectives
+bunx papi add paseo
 ```
 
 ----
